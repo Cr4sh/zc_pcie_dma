@@ -1,0 +1,5 @@
+all:
+{
+  zc_pcie_dma/zc_pcie_dma.runs/impl_1/zc_pcie_dma.bit
+}
+
