@@ -4,14 +4,15 @@ project:
 	vivado -mode batch -source zc_pcie_dma.tcl
 
 bin:
-	test -f zc_pcie_dma.bin && rm zc_pcie_dma.bin || /bin/true
-	test -f $(OUTFILE).bin && rm $(OUTFILE).bin || /bin/true
-	bootgen -image bit_to_bin.bif -arch zynq -process_bitstream bin
+	if [ -f zc_pcie_dma.bin ]; then rm zc_pcie_dma.bin; fi
+	if [ -f $(OUTFILE).bin ]; then rm $(OUTFILE).bin; fi
+	echo "all: { $(OUTFILE) }" > .bit_to_bin.bif
+	bootgen -image .bit_to_bin.bif -arch zynq -process_bitstream bin
 	test -f $(OUTFILE).bin && cp $(OUTFILE).bin zc_pcie_dma.bin
 	test -f $(OUTFILE) && cp $(OUTFILE) zc_pcie_dma.bit
 
 dts_gen:
-	test -f devicetree/my_dts && rm -r devicetree/my_dts || /bin/true
+	if [ -d devicetree/my_dts ]; then rm -r devicetree/my_dts; fi
 	cd devicetree && xsct -eval "source build_dts.tcl; build_dts ../zc_pcie_dma.xsa"
 	cd devicetree && xsct -eval "source build_dts.tcl; include_dtsi scratch_mem.dtsi"
 
