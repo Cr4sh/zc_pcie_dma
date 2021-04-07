@@ -1,0 +1,5 @@
+config BR2_PACKAGE_ZC_DMA_MEM
+	bool "zc_dma_mem"
+	depends on BR2_LINUX_KERNEL
+	help
+		DMA attack kernel module helper.

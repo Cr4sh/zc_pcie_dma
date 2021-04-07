@@ -41,7 +41,7 @@ For more information about building the device tree see Xilinx wiki:
 
 Python tools for performing DMA attacks are using high 32 megabytes of RAM to communicate with AXI DMA engines running on programmable logic. For this reason, you need to tell the Linux kernel to don't touch those reserved 32 megabytes of RAM by passing `mem` command line option. For example, ZC706 board has 1 gigabyte of RAM, so you need to put `mem=992M` string into your `uEnv.txt`. Reserved memory address and size is also located in the `devicetree/scratch_mem.dtsi` file used to generate device tree, if your board has different amount of RAM you have to edit `reg = <0x3e000000 0x2000000>` string before building the device tree.
 
-Linux kernel needs to be compiled with `CONFIG_XILINX_AXIDMA` and `CONFIG_UIO` options enabled. Also, you need to pass `uio_pdrv_genirq.of_id=generic-uio` command line option to the kernel in order to get the UIO framework usable.
+Linux kernel needs to be compiled with `CONFIG_XILINX_AXIDMA`, `CONFIG_GPIO_XILINX` and `CONFIG_UIO` options enabled. Also, you need to pass `uio_pdrv_genirq.of_id=generic-uio` command line option to the kernel in order to get the UIO framework usable.
 
 Example of `uEnv.txt` file with typical U-Boot configuration:
 
