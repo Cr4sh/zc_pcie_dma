@@ -15,9 +15,9 @@ As applied use case this design is convenient to perform pre-boot DMA attacks in
 
 [Programmable logic part of this design](https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/zynq_soc.pdf) is using [PCI Express Hard IP](https://www.xilinx.com/support/documentation/ip_documentation/pcie_7x/v3_0/pg054-7series-pcie.pdf) and two [AXI DMA](https://www.xilinx.com/support/documentation/ip_documentation/axi_dma/v7_1/pg021_axi_dma.pdf) cores: `axi_dma_0` for copying TLP streams into the RAM and `axi_dma_1` to access PCI Express endpoint configuration space with `python/pcie_cfg.py` utility. To work with AXI DMA cores on processing system side there's two options:
 
- * Python tools that are using [Linux Userspace I/O framework](https://www.kernel.org/doc/html/v4.14/driver-api/uio-howto.html), for more information see `python/linux_uio.py` and `python/linux_axi_dma.py` files.
+ * Python tools that are using [Linux Userspace I/O framework](https://www.kernel.org/doc/html/v4.14/driver-api/uio-howto.html), for more information [see](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python) `python/linux_uio.py` and `python/linux_axi_dma.py` files.
 
- * Loadable kernel module `zc_dma_mem.ko` that works with transaction layer of PCI Express and provides an access to the target system physical memory using character device based API, for more information see `kernel/zc_dma_mem/zc_dma_mem.c` file.
+ * Loadable kernel module `zc_dma_mem.ko` that works with transaction layer of PCI Express and provides an access to the target system physical memory using character device based API, for more information [see](https://github.com/Cr4sh/zc_pcie_dma/blob/master/kernel/zc_dma_mem/zc_dma_mem.c) `kernel/zc_dma_mem/zc_dma_mem.c` file.
 
 The overall system diagram is the following:
 
