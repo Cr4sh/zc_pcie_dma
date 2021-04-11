@@ -7,7 +7,7 @@ This design allows to send and receive raw TLP packets of PCI Express bus form t
 
 It's compatible with my previously released Python tools available at [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) project page.
 
-The project is designed to run on [Xilinx ZC706 evaluation kit](https://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html) but with minor changes it can be ported to [PicoZed](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/picozed/) with [FMC carrier card](https://www.avnet.com/shop/us/products/avnet-engineering-services/aes-pzcc-fmc-v2-g-3074457345635014223), cheap development boards [from AliExpress](https://www.aliexpress.com/item/1005001501660085.html) and others platforms based on Zynq-7000 series SoC.
+The project is designed to run on [Xilinx ZC706 evaluation kit](https://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html) but with minor changes it can be ported to [PicoZed](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/picozed/) with [FMC carrier card](https://www.avnet.com/shop/us/products/avnet-engineering-services/aes-pzcc-fmc-v2-g-3074457345635014223), cheap development boards [from AliExpress](https://www.aliexpress.com/item/1005001501660085.html) and other boards with [Zynq-7000 series SoC](https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html).
 
 <img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/board.jpg" width="795" height="489">
 
@@ -71,7 +71,7 @@ For more information on building the device tree see Xilinx wiki:
 
 ## Configuring Linux Kernel
 
-When Python tools for performing DMA attacks was configured to use Linux UIO framework they will need high 32 megabytes of RAM to communicate with AXI DMA engines running on programmable logic. For this reason, you need to tell the Linux kernel to don't touch those reserved 32 megabytes of RAM by passing `mem` command line option. For example, ZC706 board has 1 gigabyte of RAM, so you need to put `mem=992M` string into your `uEnv.txt`. Reserved memory address and size is also located in the `devicetree/scratch_mem.dtsi` file used to generate device tree, if your board has different amount of RAM you have to edit `reg = <0x3e000000 0x2000000>` string before building the device tree.
+When Python tools for performing DMA attacks are configured to use Linux UIO framework &minus; they will need high 32 megabytes of RAM to communicate with AXI DMA engines running on programmable logic. For this reason, you need to tell the Linux kernel to don't touch those reserved 32 megabytes of RAM by passing `mem` command line option. For example, ZC706 board has 1 gigabyte of RAM, so you need to put `mem=992M` string into your `uEnv.txt`. Reserved memory address and size is also located in the `devicetree/scratch_mem.dtsi` file used to generate device tree, if your board has different amount of RAM you have to edit `reg = <0x3e000000 0x2000000>` string before building the device tree.
 
 Linux kernel needs to be compiled with `CONFIG_GPIO_XILINX` and `CONFIG_UIO` options enabled. Also, you need to pass `uio_pdrv_genirq.of_id=generic-uio` command line option to the kernel in order to make the UIO framework usable.
 
@@ -90,7 +90,7 @@ When Python tools are configured to use loadable kernel module instead of Linux 
 
 ## Building bootable SD card
 
-For production use of your Zynq based project it's more preferable to run Linux system with read only root partition, you can build one using [Yocto](https://www.yoctoproject.org/) or (more preferable) [Buildroot](https://buildroot.org/). But for research and development purposes it's way more convenient to have a regular Ubuntu Linux system running on your Zynq, so, we are going to use Buildroot only for cross compiling of Linux kernel and uBoot bootloader and then install a regular Ubuntu 20.04 on SD card.
+For production use of your Zynq based project it's more preferable to run Linux system with read only root partition, you can build one using [Yocto](https://www.yoctoproject.org/) (official way by Xilinx docs) or [Buildroot](https://buildroot.org/) (more user friendly and simple). But for research and development purposes it's way more convenient to have a regular Ubuntu Linux system running on your Zynq, so, we are going to use Buildroot only for cross compiling of Linux kernel and uBoot bootloader and then install a regular Ubuntu 20.04 on SD card.
 
 Download and unpack most recent Buildroot version:
 
@@ -347,12 +347,12 @@ $ sudo add-apt-repository universe
 $ sudo apt install python2
 ```
 
-Now you have everything what you need to perform some DMA attacks.
+Now, when system is ready, you can perform some DMA attacks.
 
 
 ## DMA attacks usage
 
-ZC706 board must be connected to PCIe (or mPCIe, or M.2) slot of the target system before power on. After the target system was booted you can see the following PCI Express device connected:
+ZC706 board must be connected to PCIe (or mPCIe, or M.2) slot of the target system before you will power on everything. After the target system was booted you can see the following PCI Express device connected:
 
 ```
 $ lspci -s 01:00.0 -vv
@@ -397,7 +397,7 @@ PCI Express device as it can be seen on Windows:
 
 Now you have to checkout [Python tools from PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python) project and copy them to your Ubuntu system running on ZC706.
 
-As it was said previously, Python tools can interact with programmable logic using Linux UIO framework or, more preferable, loadable kernel module. To use `zc_dma_mem.ko` kernel module you need to edit `python/pcie_lib_config.py` and set `device_type` variable to `DEVICE_TYPE_DRIVER`. To use UIO you need to set `device_type` variable to `DEVICE_TYPE_UIO`.
+As it was said previously, Python tools can interact with programmable logic using Linux UIO framework or, which is more preferable, loadable kernel module. To use `zc_dma_mem.ko` kernel module you need to edit `python/pcie_lib_config.py` and set `device_type` variable to `DEVICE_TYPE_DRIVER`. To use UIO you need to set `device_type` variable to `DEVICE_TYPE_UIO`.
 
 Loadable kernel module `zc_dma_mem.ko` creates two separate character devices:
 
