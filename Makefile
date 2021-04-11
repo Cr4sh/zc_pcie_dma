@@ -22,5 +22,7 @@ dts_build:
 
 uenv:
 	test -f zc_pcie_dma.bit
-	python -c 'import os; print "uenvcmd=fatload mmc 0 0x4000000 zc_pcie_dma.bit && fpga loadb 0 0x4000000 " + str(os.path.getsize("zc_pcie_dma.bit"))' > uEnv.txt
-
+	python -c 'print "bootargs=console=ttyPS0,115200 root=/dev/mmcblk0p2 rw earlyprintk rootfstype=ext4 rootwait devtmpfs.mount=0 mem=992M uio_pdrv_genirq.of_id=generic-uio"' > uEnv.txt
+	python -c 'import os; print "load_fpga=fatload mmc 0 0x4000000 zc_pcie_dma.bit && fpga loadb 0 0x4000000 " + str(os.path.getsize("zc_pcie_dma.bit"))' >> uEnv.txt
+	python -c 'print "load_image=fatload mmc 0 $${kernel_load_address} $${kernel_image} && fatload mmc 0 $${devicetree_load_address} devicetree.dtb"' >> uEnv.txt
+	python -c 'print "uenvcmd=echo Copying Linux from SD to RAM... && mmcinfo && run load_fpga && run load_image && bootm $${kernel_load_address} - $${devicetree_load_address}"' >> uEnv.txt
