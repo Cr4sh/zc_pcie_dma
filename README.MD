@@ -13,7 +13,7 @@ The project is designed to run on [Xilinx ZC706 evaluation kit](https://www.xili
 
 As applied use case this design is convenient to perform pre-boot DMA attacks in general or to deploy [my Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) which is a part of PCI Express DIY hacking toolkit project.
 
-Programmable logic part of this design uses PCI Express Hard IP and two AXI DMA cores: `axi_dma_0` for copying TLP streams into the RAM and `axi_dma_1` to access PCI Express endpoint configuration space with `python/pcie_cfg.py` utility. To work with AXI DMA cores on processing system side there's two options:
+[Programmable logic part of this design](https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/zynq_soc.pdf) uses PCI Express Hard IP and two AXI DMA cores: `axi_dma_0` for copying TLP streams into the RAM and `axi_dma_1` to access PCI Express endpoint configuration space with `python/pcie_cfg.py` utility. To work with AXI DMA cores on processing system side there's two options:
 
  * Python tools that are using [Linux Userspace I/O framework](https://www.kernel.org/doc/html/v4.14/driver-api/uio-howto.html), for more information see `python/linux_uio.py` and `python/linux_axi_dma.py` files.
 
@@ -40,6 +40,8 @@ The project consists from the following files:
  * `uEnv.txt` &minus; uBoot bootloader configuration file used to load bitstream and boot Linux kernel.
 
  * `kernel/zc_dma_mem/` &minus; Source code of `zc_dma_mem.ko` loadable kernel module.
+
+For more information about configuration and usage of Xilinx ZC706 evaluation kit [check its user guide](https://www.xilinx.com/support/documentation/boards_and_kits/zc706/ug954-zc706-eval-board-xc7z045-ap-soc.pdf).
 
 
 ## Building the Project
