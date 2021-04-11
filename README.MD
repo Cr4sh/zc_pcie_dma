@@ -345,7 +345,11 @@ After the Linux is successfully booted you can log into the system with previous
 $ sudo modprobe zc_dma_mem
 ```
 
-Install Python 2.7:
+Here you can see some demo:
+
+[![asciicast](https://asciinema.org/a/mNTipFClprZneqsTXiWDhUFCx.svg)](https://asciinema.org/a/mNTipFClprZneqsTXiWDhUFCx)
+
+And final step, install Python 2.7:
 
 ```
 $ sudo apt install python-minimal
