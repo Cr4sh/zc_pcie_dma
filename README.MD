@@ -316,9 +316,6 @@ Mount root partition and copy needed files:
 $ sudo mount /dev/sdc2 /mnt/tmp
 $ sudo cp -a ~/debootstrap_focal_armhf/. /mnt/tmp
 $ sudo cp -a ~/buildroot-2021.02/output/target/lib/modules /mnt/tmp/lib
-$ sudo mkdir -p /mnt/tmp/home/user/zc_pcie_dma
-$ sudo cp -r ~/zc_pcie_dma/python /mnt/tmp/home/user/zc_pcie_dma
-$ sudo chown -R 1000:1000 /mnt/tmp/home/user/zc_pcie_dma
 $ sudo umount /mnt/tmp
 ```
 
