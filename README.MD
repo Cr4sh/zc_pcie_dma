@@ -19,9 +19,27 @@ Programmable logic part of this design uses PCI Express Hard IP and two AXI DMA 
 
  * Loadable kernel module `zc_dma_mem.ko` that works with transaction layler of PCI Express and provides an access to the target system physical memory using character device based API, for more information see `kernel/zc_dma_mem/zc_dma_mem.c` file.
 
- The overall system diagram is the following:
+The overall system diagram is the following:
 
  <img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/diagram.png" width="790" height="544">
+
+The project is consists from the following files:
+
+ * `zc_pcie_dma.tcl` &minus; Template to generate Vivado project for Zynq-7000 programmable logic bitstream.
+
+ * `hdl/` &minus; Verilog sources and constraints.
+
+ * `ip/` &minus; Configuration files for IP cores.
+
+ * `zc_pcie_dma.bit`, `zc_pcie_dma.bin` &minus; Ready to use bitstream binaries.
+
+ * `devicetree` &minus; Files required to generate device tree for Linux kernel running on Zynq-7000 processing system.
+
+ * `devicetree.dtb` &minus; Ready to use device tree binary.
+
+ * `uEnv.txt` &minus; uBoot bootloader configuration file used to load bitstream and boot Linux kernel.
+
+ * `kernel/zc_dma_mem/` &minus; Source code of `zc_dma_mem.ko` loadable kernel module.
 
 
 ## Building the Project
