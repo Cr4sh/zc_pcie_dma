@@ -1,11 +1,17 @@
  
 # Xilinx Zynq DMA attack tools
 
-## General Information
-
 This design allows to send and receive raw TLP packets of PCI Express bus form the application code running on Xilinx Zynq processing system. It can be used for prototyping, studying of PCI Express transaction and application layers, performing DMA attacks and other purposes.
 
-It's compatible with my previously released Python tools available at [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) project page.
+(General Information)[#general-information]
+(Building the Project)[#building-the-project]
+(Configuring Linux Kernel)[#configuring-linux-kernel]
+(Preparing Bootable SD Card)[#preparing-bootable-sd-card]
+(DMA Attacks How-to)[#dma-attacks-how-to]
+
+## General Information
+
+This project is compatible with my previously released Python tools available at [PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze) project page.
 
 The project is designed to run on [Xilinx ZC706 evaluation kit](https://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html) but with minor changes it can be ported to [PicoZed](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/picozed/) with [FMC carrier card](https://www.avnet.com/shop/us/products/avnet-engineering-services/aes-pzcc-fmc-v2-g-3074457345635014223), cheap development boards [from AliExpress](https://www.aliexpress.com/item/1005001501660085.html) and other boards with [Zynq-7000 series SoC](https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html).
 
@@ -90,7 +96,7 @@ uenvcmd=echo Copying Linux from SD to RAM... && mmcinfo && run load_fpga && run 
 When Python tools are configured to use loadable kernel module instead of Linux UIO framework reserved memory is not required, `zc_dma_mem.ko` will allocate physical memory range for AXI DMA engines by calling `dma_alloc_coherent()` kernel function.
 
 
-## Building bootable SD card
+## Preparing Bootable SD Card
 
 For production use of your Zynq based project it's more preferable to run Linux system with read only root partition, you can build one using [Yocto](https://www.yoctoproject.org/) (official way by Xilinx docs) or [Buildroot](https://buildroot.org/) (more user friendly and simple). But for research and development purposes it's way more convenient to have a regular Ubuntu Linux system running on your Zynq, so, we are going to use Buildroot only for cross compiling of Linux kernel and uBoot bootloader and then install a regular Ubuntu 20.04 on SD card.
 
@@ -115,7 +121,7 @@ Configure Linux kernel, make sure that `CONFIG_GPIO_XILINX` and `CONFIG_UIO` opt
 $ make linux-menuconfig
 ```
 
-Compile kernel, bootloder and `zc_dma_mem.ko` kernel extension:
+Compile kernel, bootloder and `zc_dma_mem.ko` kernel module:
 
 ```
 $ make BR2_EXTERNAL="path/to/zc_pcie_dma/kernel/zc_dma_mem" all
@@ -310,7 +316,7 @@ $ sudo cp ~/zc_pcie_dma/zc_pcie_dma.bit /mnt/tmp
 $ sudo umount /mnt/tmp
 ```
 
-Mount root partition and copy needed files:
+Mount root partition as `/mnt/tmp`, copy root file system contents and kernel modules:
 
 ```
 $ sudo mount /dev/sdc2 /mnt/tmp
@@ -319,20 +325,20 @@ $ sudo cp -a ~/buildroot-2021.02/output/target/lib/modules /mnt/tmp/lib
 $ sudo umount /mnt/tmp
 ```
 
-Eject SD card, insert it into the board:
+Eject SD card:
 
 ```
 $ sudo eject /dev/sdc
 ```
 
-Now you can connect USB cable to the serial console of ZC706 and turn the board on:
+Now you can connect USB cable to the serial console of ZC706, insert prepared SD card and turn the board on:
 
 ```
 $ sudo pip install pyserial
 $ sudo miniterm.py --eol LF --raw /dev/ttyUSB0 115200
 ```
 
-After the Linux is successfully booted you can log into the system with previously created user and try to load `zc_dma_mem.ko` kernel extension:
+After the Linux is successfully booted you can log into the system with previously created user and try to load `zc_dma_mem.ko` kernel module:
 
 ```
 $ sudo modprobe zc_dma_mem
@@ -349,7 +355,7 @@ $ sudo apt install python2
 Now, when system is ready, you can perform some DMA attacks.
 
 
-## DMA attacks usage
+## DMA Attacks How-to
 
 ZC706 board must be connected to PCIe (or mPCIe, or M.2) slot of the target system before you will power on everything. After the target system was booted you can see the following PCI Express device connected:
 
