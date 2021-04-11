@@ -17,13 +17,13 @@ Programmable logic part of this design uses PCI Express Hard IP and two AXI DMA 
 
  * Python tools that are using [Linux Userspace I/O framework](https://www.kernel.org/doc/html/v4.14/driver-api/uio-howto.html), for more information see `python/linux_uio.py` and `python/linux_axi_dma.py` files.
 
- * Loadable kernel module `zc_dma_mem.ko` that works with transaction layler of PCI Express and provides an access to the target system physical memory using character device based API, for more information see `kernel/zc_dma_mem/zc_dma_mem.c` file.
+ * Loadable kernel module `zc_dma_mem.ko` that works with transaction layer of PCI Express and provides an access to the target system physical memory using character device based API, for more information see `kernel/zc_dma_mem/zc_dma_mem.c` file.
 
 The overall system diagram is the following:
 
  <img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/diagram.png" width="790" height="544">
 
-The project is consists from the following files:
+The project consists from the following files:
 
  * `zc_pcie_dma.tcl` &minus; Template to generate Vivado project for Zynq-7000 programmable logic bitstream.
 
@@ -33,7 +33,7 @@ The project is consists from the following files:
 
  * `zc_pcie_dma.bit`, `zc_pcie_dma.bin` &minus; Ready to use bitstream binaries.
 
- * `devicetree` &minus; Files required to generate device tree for Linux kernel running on Zynq-7000 processing system.
+ * `devicetree` &minus; Files required to generate device tree for Linux kernel running on processing system.
 
  * `devicetree.dtb` &minus; Ready to use device tree binary.
 
@@ -48,7 +48,7 @@ To build FPGA bitstream and device tree you have to perform the following steps:
 
  1. Run `make project` to create Vivado project from `zc_pcie_dma.tcl` template.
 
- 2. Open `zc_pcie_dma/zc_pcie_dma.xpr` in Vivado, run sythesis, implementation, generate the bitstream and export hardware design into the `zc_pcie_dma.xsa` file.
+ 2. Open `zc_pcie_dma/zc_pcie_dma.xpr` in Vivado, run synthesis, implementation, generate the bitstream and export hardware design into the `zc_pcie_dma.xsa` file.
 
  3. Run `make bin` and edit `uEnv.txt` with U-Boot configuration to set correct size of `zc_pcie_dma.bit` file at the end of `fpga loadb` command.
 
@@ -126,7 +126,7 @@ After completing this step you will have the following files required for our sy
  * `output/images/uImage` &minus; Linux kernel image.
  * `output/target/lib/modules` &minus; Loadable kernel modules along with `zc_dma_mem.ko`.
 
-To prepare root file system with Ubuntu 20.04 we will use debootstrap and QEMU userspace emulation:
+To prepare root file system with Ubuntu 20.04 we will use [debootstrap and QEMU userspace emulation](https://wiki.ubuntu.com/ARM/RootfsFromScratch/QemuDebootstrap):
 
 ```
 $ sudo apt install qemu-user-static qemu-user-binfmt
@@ -144,7 +144,7 @@ magic 7f454c4601010100000000000000000002002800
 mask ffffffffffffff00fffffffffffffffffeffffff
 ```
 
-Fetch Ubuntu 20.04 root filesystem with debootstrap:
+Fetch Ubuntu 20.04 root file system with debootstrap:
 
 ```
 $ sudo apt install debootstrap
@@ -164,7 +164,7 @@ Run second stage:
 $ /debootstrap/debootstrap --second-stage
 ```
 
-Now your Ubuntu system for Xilinx Zynq is almost ready, let's do some basic configuration.
+Now your Ubuntu system for Zynq is almost ready, let's do some basic configuration.
 Create `/etc/fstab`:
 
 ```
@@ -236,7 +236,7 @@ Erase SD card contents:
 $ dd if=/dev/zero of=/dev/sdc bs=1024
 ```
 
-Run fdisk and create two partitios, 256 Megabytes will be used for boot partition and remaining SD card space for root filesystem:
+Run fdisk and create two partitions, 256 Megabytes will be used for boot partition and remaining SD card space for root file system:
 
 ```
 $ sudo fdisk /dev/sdc
@@ -282,13 +282,13 @@ Calling ioctl() to re-read partition table.
 Syncing disks.
 ```
 
-Create FAT32 filesystem for boot partition:
+Create FAT32 file system for boot partition:
 
 ```
 $ sudo mkfs.vfat -F 32 -n BOOT /dev/sdc1
 ```
 
-Create ext4 filesystem for root partition:
+Create ext4 file system for root partition:
 
 ```
 $ sudo mkfs.ext4 /dev/sdc2
@@ -390,6 +390,10 @@ $ lspci -s 01:00.0 -vv
        EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
   Capabilities: [100 v1] Device Serial Number 00-00-00-01-01-00-0a-35
 ```
+
+PCI Express device as it can be seen on Windows:
+
+<img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/device_win.png" width="689" height="464">
 
 Now you have to checkout [Python tools from PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python) project and copy them to your Ubuntu system running on ZC706.
 
