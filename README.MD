@@ -352,7 +352,7 @@ Here you can see some demo:
 And final step, install Python 2.7:
 
 ```
-$ sudo apt install python-minimal
+$ sudo apt install software-properties-common
 $ sudo add-apt-repository universe
 $ sudo apt install python2
 ```
