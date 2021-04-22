@@ -115,6 +115,7 @@ class TestMem(unittest.TestCase):
 
         val = 0x0102030405060708
 
+        # backup old data
         old = dev.mem_read_8(addr)
 
         dev.mem_write_8(addr, val)
@@ -124,6 +125,7 @@ class TestMem(unittest.TestCase):
         assert dev.mem_read_4(addr) == val & 0xffffffff
         assert dev.mem_read_8(addr) == val
 
+        # restore old data
         dev.mem_write_8(addr, old)
 
     def test_unaligned(self, addr = TEST_ADDR):
@@ -132,6 +134,7 @@ class TestMem(unittest.TestCase):
 
         val = int(time.time())
 
+        # backup old data
         old = dev.mem_read_8(addr)
 
         dev.mem_write_8(addr, 0)
@@ -149,6 +152,7 @@ class TestMem(unittest.TestCase):
 
         assert dev.mem_read_8(addr) == val << 24
 
+        # restore old data
         dev.mem_write_8(addr, old)
 
     def test_cross_page(self):
@@ -164,6 +168,24 @@ class TestMem(unittest.TestCase):
         self.test_normal(addr = self.TEST_ADDR - 3)
         
         self.test_unaligned(addr = self.TEST_ADDR - 4) 
+
+    def test_large(self, addr = TEST_ADDR):
+
+        dev = DeviceMem()
+
+        data = ''.join(map(lambda c: chr(c), range(0, 0x100)))
+
+        # backup old data
+        old = dev.mem_read(addr, len(data))
+
+        dev.mem_write(addr, data)
+
+        for i in range(0, len(data) - 1):
+
+            assert dev.mem_read(addr + i, len(data) - i) == data[i :]
+
+        # restore old data
+        dev.mem_write(addr, old)
 
 
 class TestTlp(unittest.TestCase):

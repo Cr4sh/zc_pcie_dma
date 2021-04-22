@@ -339,20 +339,19 @@ static int mem_read(unsigned long long addr, unsigned char *buff, unsigned int s
             }
 
             data_len = tlp_size - 3;
+            received += data_len;
 
             for (int i = 0; i < data_len; i += 1)
             {
                 // copy data to the output buffer with reversed byte order
                 *(unsigned int *)(buff + ptr + (i * sizeof(unsigned int))) = htonl(addr_virt_rx[i + 3]); 
             }
-
-            received += data_len;
+            
+            addr += data_len * sizeof(unsigned int);
+            ptr += data_len * sizeof(unsigned int);        
         }
 
-        mem_read_tag += 1;
-
-        addr += data_len * sizeof(unsigned int);
-        ptr += data_len * sizeof(unsigned int);        
+        mem_read_tag += 1;        
     }    
 
     return 0;
