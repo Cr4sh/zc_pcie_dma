@@ -407,7 +407,13 @@ PCI Express device as it can be seen on Windows:
 
 Now you have to checkout [Python tools from PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python) project and copy them to your Ubuntu system running on ZC706.
 
-As it was said previously, Python tools can interact with programmable logic using Linux UIO framework or, which is more preferable, loadable kernel module. To use `zc_dma_mem.ko` kernel module you need to edit `python/pcie_lib_config.py` and set `device_type` variable to `DEVICE_TYPE_DRIVER`. To use UIO you need to set `device_type` variable to `DEVICE_TYPE_UIO`.
+As it was said previously, Python tools can interact with programmable logic using Linux UIO framework or, which is more preferable, loadable kernel module. To configure the tools you need to edit `python/pcie_lib_config.py` and set `device_type` variable to one of the following values:
+
+ * `DEVICE_TYPE_UIO` &minus; No kernel module is used, all interaction with AXI DMA cores are implemented in the Python code with the help of Linux UIO framework. This option is not recommended because of low speed and potential cache coherence issues.
+
+ * `DEVICE_TYPE_DRIVER` &minus; Use loadable kernel module to interact with AXI DMA cores for sending and receiving raw TLP packets of PCI-E bus, Python code is used to generate and handle the packets. This option is useful for experiments and prototyping when you might need to have a full control over the TLP packets contents.
+
+ * `DEVICE_TYPE_DRIVER_DIRECT` &minus; Offloads whole TLP packets processing logic to the loadable kernel module while using memory read and write operations from the Python code. This option is best for performance.
 
 Loadable kernel module `zc_dma_mem.ko` creates two separate character devices:
 
@@ -438,6 +444,20 @@ $ dd if=/dev/zc_dma_mem_0 skip=65536 bs=256 count=1 | hexdump -Cv
 000000f0  65 9a 65 8b 64 8b 64 9b  74 9a 75 8a 65 8a 64 8a  |e.e.d.d.t.u.e.d.|
 00000100
 256 bytes copied, 0.000632154 s, 405 kB/s
+```
+
+Loadable kernel module `zc_dma_mem.ko` also has an optional parameter `max_tlp_len` which allows to specify maximum payload length (in 4 byte words) of PCI-E bus transaction layer packets. Default vale is set to 32, while alowed values is in between 1 and 250. You can specify `max_tlp_len` while loading the kernel module:
+
+```
+# insmod zc_dma_mem.ko max_tlp_len=128
+```
+
+... or by using appropriate pseudo-file of sysfs:
+
+```
+# echo 128 > /sys/module/zc_dma_mem/parameters/max_tlp_len
+# cat /sys/module/zc_dma_mem/parameters/max_tlp_len
+128
 ```
 
 To view PCI Express endpoint configuration space you can use `python/pcie_cfg.py` utility:
