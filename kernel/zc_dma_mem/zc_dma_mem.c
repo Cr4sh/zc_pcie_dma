@@ -1,4 +1,5 @@
 #include <linux/module.h>
+#include <linux/moduleparam.h>
 #include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
@@ -47,8 +48,10 @@ MODULE_LICENSE("GPL");
 // how many seconds to wait for DMA transfer to complete
 #define DMA_TIMEOUT 1
 
-// TLP data length for mem_read()
-#define MAX_TLP_LEN 0x20
+// minimum, maximum and default value for TLP payload length in dwords
+#define TLP_LEN_MIN 1
+#define TLP_LEN_MAX ((1024 / sizeof(unsigned int)) - 4)
+#define TLP_LEN_DEFAULT 32
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -96,6 +99,32 @@ static unsigned int *dev_addr_gpio = NULL;
 static unsigned char mem_read_tag = 0;
 
 static spinlock_t dma_dev_lock;
+
+static int my_set(const char *val, const struct kernel_param *kp)
+{
+    int num = 0;
+
+    // get integer from hexadecimal string
+    int ret = kstrtoint(val, 10, &num);
+
+    // check for the sane value
+    if (ret != 0 || num < TLP_LEN_MIN || num > TLP_LEN_MAX)
+    {
+        return -EINVAL;
+    }
+ 
+    return param_set_int(val, kp);
+}
+ 
+static const struct kernel_param_ops param_ops = 
+{
+    .set = my_set,
+    .get = param_get_int
+};
+
+static int max_tlp_len = TLP_LEN_DEFAULT;
+
+module_param_cb(max_tlp_len, &param_ops, &max_tlp_len, 0664);
 
 static inline void get_device_id(struct device_id *dev_id)
 {
@@ -281,14 +310,14 @@ static int mem_read(unsigned long long addr, unsigned char *buff, unsigned int s
     {
         unsigned char tlp_tag = mem_read_tag;
         unsigned int tlp_size = 0, data_len = 0, received = 0;
-        unsigned int read_len = 0, read_len_max = MAX_TLP_LEN;        
+        unsigned int read_len = 0, read_len_max = max_tlp_len; 
 
         if ((addr & 0xfff) != 0)
         {
             // memory read TLP must reside within the single memory page
             read_len_max = MIN(
                 (unsigned int)(ALIGN_UP(addr, PAGE_SIZE) - addr) / sizeof(unsigned int),
-                MAX_TLP_LEN
+                max_tlp_len
             );
         }
 
