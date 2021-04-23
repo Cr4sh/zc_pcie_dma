@@ -48,7 +48,7 @@ MODULE_LICENSE("GPL");
 #define DMA_TIMEOUT 1
 
 // TLP data length for mem_read()
-#define MAX_TLP_LEN 0x10
+#define MAX_TLP_LEN 0x20
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -168,7 +168,7 @@ static int dma_transfer(unsigned int *dma_dev, unsigned long long addr, unsigned
     if ((status & (DMA_ST_ERR_INT | DMA_ST_ERR_SLV | DMA_ST_ERR_DEC)) != 0)
     {
         printk(KERN_ERR "dma_transfer() fails, status = 0x%.8x\n", status);
-        return -EFAULT;
+        return -EIO;
     }
 
     return 0;
@@ -190,7 +190,7 @@ static int tlp_recv(unsigned int *ret_size)
     if (size % sizeof(unsigned int) != 0)
     {
         printk(KERN_ERR "tlp_recv() ERROR: Size is not aligned\n");
-        return -EFAULT;
+        return -EIO;
     }
 
     if (ret_size)
@@ -240,7 +240,7 @@ static unsigned int cfg_read(unsigned int addr, unsigned int *data)
     if (size != sizeof(unsigned int))
     {
         printk(KERN_ERR "cfg_read() ERROR: Bad size\n");
-        return -EFAULT;
+        return -EIO;
     }
 
     if (data)
@@ -335,7 +335,7 @@ static int mem_read(unsigned long long addr, unsigned char *buff, unsigned int s
                     (unsigned char)(addr_virt_rx[2] >> 8), tlp_tag, addr
                 );
 
-                return -EFAULT;
+                return -EIO;
             }
 
             data_len = tlp_size - 3;
@@ -426,7 +426,7 @@ static int zc_dma_mem_dev_open(struct inode *inode, struct file *file)
     if ((file->private_data = kmalloc(sizeof(struct device_context), GFP_KERNEL)) == NULL)
     {
         printk(KERN_ERR "zc_dma_mem_dev_open() ERROR: kmalloc() fails\n");
-        return -EFAULT;
+        return -ENOMEM;
     }
 
     ctx = (struct device_context *)file->private_data;
@@ -492,7 +492,7 @@ static long zc_dma_mem_dev_ioctl(struct file *file, unsigned int cmd, unsigned l
         if (copy_to_user(arg_user, &dev_id, sizeof(struct device_id)) != 0) 
         {
             printk(KERN_ERR "zc_dma_mem_dev_ioctl() ERROR: copy_to_user() fails\n");
-            return -EFAULT;
+            return -EACCES;
         }
 
         return 0;
@@ -506,7 +506,7 @@ static long zc_dma_mem_dev_ioctl(struct file *file, unsigned int cmd, unsigned l
         if (copy_from_user(&cfg_addr, arg_user, sizeof(cfg_addr)) != 0) 
         {
             printk(KERN_ERR "zc_dma_mem_dev_ioctl() ERROR: copy_from_user() fails\n");
-            return -EFAULT;
+            return -EACCES;
         }
 
         spin_lock(&dma_dev_lock);
@@ -518,20 +518,20 @@ static long zc_dma_mem_dev_ioctl(struct file *file, unsigned int cmd, unsigned l
         
         if (err != 0)
         {
-            return -EFAULT;   
+            return err;   
         }
 
         // copy data to the user buffer
         if (copy_to_user(arg_user, &cfg_data, sizeof(cfg_data)) != 0) 
         {
             printk(KERN_ERR "zc_dma_mem_dev_ioctl() ERROR: copy_to_user() fails\n");
-            return -EFAULT;
+            return -EACCES;
         }
 
         return 0;
     }
 
-    return -EFAULT;
+    return -ENODEV;
 }
 
 static loff_t zc_dma_mem_dev_llseek(struct file *file, loff_t offset, int whence)
@@ -554,7 +554,7 @@ static loff_t zc_dma_mem_dev_llseek(struct file *file, loff_t offset, int whence
         else
         {
             printk(KERN_ERR "zc_dma_mem_dev_llseek() ERROR: Unsupported whence %d\n", whence);
-            return -EFAULT;
+            return -EINVAL;
         }
 
         // return current address
@@ -565,12 +565,12 @@ static loff_t zc_dma_mem_dev_llseek(struct file *file, loff_t offset, int whence
         printk(KERN_ERR "zc_dma_mem_dev_llseek() ERROR: Unsupported operation\n");
     }
 
-    return -EFAULT;
+    return -ENODEV;
 }
 
 static ssize_t zc_dma_mem_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
 {
-    ssize_t ret = -EFAULT;
+    ssize_t ret = -ENODEV;
     int device_num = MINOR(file->f_path.dentry->d_inode->i_rdev);
     struct device_context *ctx = (struct device_context *)file->private_data;    
 
@@ -585,29 +585,29 @@ static ssize_t zc_dma_mem_dev_read(struct file *file, char __user *buf, size_t c
         if (data == NULL)
         {
             printk(KERN_ERR "zc_dma_mem_dev_read() ERROR: vmalloc() fails\n");
-            return -EFAULT;
+            return -ENOMEM;
         }
 
         spin_lock(&dma_dev_lock);
 
         // perform memory read operation
-        int err = mem_read(read_addr, data, read_size);
+        ret = mem_read(read_addr, data, read_size);
 
         spin_unlock(&dma_dev_lock);
         
-        if (err == 0)
+        if (ret == 0)
         {
             // copy data to the user buffer
             if (copy_to_user(buf, data + (ctx->addr - read_addr), count) == 0) 
             {
                 // increment current read/write address
                 ctx->addr += count;
-
                 ret = count;
             }
             else
             {
                 printk(KERN_ERR "zc_dma_mem_dev_read() ERROR: copy_to_user() fails\n");
+                ret = -EACCES;
             }
         }
 
@@ -621,21 +621,14 @@ static ssize_t zc_dma_mem_dev_read(struct file *file, char __user *buf, size_t c
         spin_lock(&dma_dev_lock);
 
         // receive TLP
-        int err = tlp_recv(&tlp_size);
+        ret = tlp_recv(&tlp_size);
 
         spin_unlock(&dma_dev_lock);
         
-        if (err != 0)
+        if (ret != 0)
         {
             printk(KERN_ERR "zc_dma_mem_dev_read() ERROR: tlp_recv() fails\n");
-
-            if (err == -ETIME)
-            {
-                // tell to the caller that timeout occurred
-                return -ETIME;
-            }
-
-            return -EFAULT;
+            return ret;
         }
 
         size = tlp_size * sizeof(unsigned int);
@@ -650,11 +643,13 @@ static ssize_t zc_dma_mem_dev_read(struct file *file, char __user *buf, size_t c
             else
             {
                 printk(KERN_ERR "zc_dma_mem_dev_read() ERROR: copy_to_user() fails\n");
+                ret = -EACCES;
             }
         }
         else
         {
             printk(KERN_ERR "zc_dma_mem_dev_read() ERROR: Insufficient buffer length\n");
+            ret = -ENOMEM;
         }        
     }
 
@@ -663,7 +658,7 @@ static ssize_t zc_dma_mem_dev_read(struct file *file, char __user *buf, size_t c
 
 static ssize_t zc_dma_mem_dev_write(struct file *file, const char __user *buf, size_t count, loff_t *offset)
 {
-    ssize_t ret = -EFAULT;
+    ssize_t ret = -ENODEV;
     int device_num = MINOR(file->f_path.dentry->d_inode->i_rdev);
     struct device_context *ctx = (struct device_context *)file->private_data;    
 
@@ -678,17 +673,17 @@ static ssize_t zc_dma_mem_dev_write(struct file *file, const char __user *buf, s
         if (data == NULL)
         {
             printk(KERN_ERR "zc_dma_mem_dev_write() ERROR: vmalloc() fails\n");
-            return -EFAULT;
+            return -ENOMEM;
         }
 
         spin_lock(&dma_dev_lock);
 
         // read existing memory contents
-        int err = mem_read(read_addr, data, read_size);
+        ret = mem_read(read_addr, data, read_size);
 
         spin_unlock(&dma_dev_lock);
         
-        if (err == 0)
+        if (ret == 0)
         {
             // copy data from the user buffer
             if (copy_from_user(data + (ctx->addr - read_addr), buf, count) == 0) 
@@ -696,21 +691,21 @@ static ssize_t zc_dma_mem_dev_write(struct file *file, const char __user *buf, s
                 spin_lock(&dma_dev_lock);
 
                 // write modified memory contents
-                err = mem_write(read_addr, data, read_size);
+                ret = mem_write(read_addr, data, read_size);
 
                 spin_unlock(&dma_dev_lock);
 
-                if (err == 0)
+                if (ret == 0)
                 {
                     // increment current read/write address
                     ctx->addr += count;
-
                     ret = count;
                 }
             }        
             else
             {
                 printk(KERN_ERR "zc_dma_mem_dev_write() ERROR: copy_from_user() fails\n");
+                ret = -EACCES;
             }
         }
 
@@ -730,21 +725,14 @@ static ssize_t zc_dma_mem_dev_write(struct file *file, const char __user *buf, s
             spin_lock(&dma_dev_lock);
 
             // send TLP
-            int err = tlp_send((unsigned int)(count / sizeof(unsigned int)));
+            ret = tlp_send((unsigned int)(count / sizeof(unsigned int)));
 
             spin_unlock(&dma_dev_lock);
 
-            if (err != 0)
+            if (ret != 0)
             {
                 printk(KERN_ERR "zc_dma_mem_dev_write() ERROR: tlp_send() fails\n");
-
-                if (err == -ETIME)
-                {
-                    // tell to the caller that timeout occurred
-                    return -ETIME;
-                }
-
-                return -EFAULT;
+                return ret;
             }
 
             ret = count;
@@ -752,6 +740,7 @@ static ssize_t zc_dma_mem_dev_write(struct file *file, const char __user *buf, s
         else
         {
             printk(KERN_ERR "zc_dma_mem_dev_write() ERROR: copy_from_user() fails\n");
+            ret = -EACCES;
         }
     }  
 
