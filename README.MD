@@ -16,9 +16,9 @@ The project is compatible with my previously released Python tools available at 
 
 The project is designed to run on [Xilinx ZC706 evaluation kit](https://www.xilinx.com/products/boards-and-kits/ek-z7-zc706-g.html) but with minor changes it can be ported to [PicoZed](https://www.avnet.com/wps/portal/us/products/avnet-boards/avnet-board-families/picozed/) with [FMC carrier card](https://www.avnet.com/shop/us/products/avnet-engineering-services/aes-pzcc-fmc-v2-g-3074457345635014223), cheap development boards [from AliExpress](https://www.aliexpress.com/item/1005001501660085.html) and other boards with [Zynq-7000 series SoC](https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html).
 
-<img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/board.jpg" width="795" height="489">
+<img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/board.jpg" width="795">
 
-As applied use case this design is convenient to perform pre-boot DMA attacks in general or to deploy my [Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) which is a part of PCI Express DIY hacking toolkit project.
+As applied use case this design is convenient to perform pre-boot DMA attacks in general or to deploy my [Hyper-V backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorHv) or [Boot Backdoor](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python/payloads/DmaBackdoorBoot), they are parts of PCI Express DIY hacking toolkit project.
 
 [Programmable logic part of this design](https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/zynq_soc.pdf) is using [PCI Express Hard IP](https://www.xilinx.com/support/documentation/ip_documentation/pcie_7x/v3_0/pg054-7series-pcie.pdf) and two [AXI DMA](https://www.xilinx.com/support/documentation/ip_documentation/axi_dma/v7_1/pg021_axi_dma.pdf) cores: `axi_dma_0` for copying TLP streams into the RAM and `axi_dma_1` to access PCI Express endpoint configuration space with `python/pcie_cfg.py` utility. To work with AXI DMA cores on processing system side there's two options:
 
@@ -28,7 +28,7 @@ As applied use case this design is convenient to perform pre-boot DMA attacks in
 
 The overall system diagram is the following:
 
- <img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/diagram.png" width="790" height="544">
+ <img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/diagram.png" width="790">
 
 The project consists from the following files:
 
@@ -403,7 +403,7 @@ $ lspci -s 01:00.0 -vv
 
 PCI Express device as it can be seen on Windows:
 
-<img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/device_win.png" width="689" height="464">
+<img src="https://raw.githubusercontent.com/Cr4sh/zc_pcie_dma/master/docs/images/device_win.png" width="689">
 
 Now you have to checkout [Python tools from PCI Express DIY hacking toolkit](https://github.com/Cr4sh/s6_pcie_microblaze/tree/master/python) project and copy them to your Ubuntu system running on ZC706.
 
